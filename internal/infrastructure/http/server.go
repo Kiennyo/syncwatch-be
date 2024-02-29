@@ -16,12 +16,14 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/kiennyo/syncwatch-be/internal/infrastructure/config"
+	"github.com/kiennyo/syncwatch-be/internal/infrastructure/security"
 )
 
 type Server struct {
 	wg     *sync.WaitGroup
 	config config.HTTP
 	routes map[string]chi.Router
+	tokens *security.Tokens
 }
 
 func (s *Server) Serve() error {
@@ -77,18 +79,24 @@ func (s *Server) AddRoutes(path string, routes chi.Router) *Server {
 	return s
 }
 
-func New(wg *sync.WaitGroup, c config.HTTP) *Server {
+func New(wg *sync.WaitGroup, c config.HTTP, tokens *security.Tokens) *Server {
 	return &Server{
 		wg:     wg,
 		config: c,
 		routes: make(map[string]chi.Router),
+		tokens: tokens,
 	}
 }
 
 func (s *Server) handler() *chi.Mux {
+	authMiddleware := security.AuthMiddleware{
+		Tokens: s.tokens,
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(authMiddleware.Authenticate)
 
 	for path, routes := range s.routes {
 		r.Mount(path, routes)
