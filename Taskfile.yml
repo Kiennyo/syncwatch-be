@@ -1,0 +1,73 @@
+version: '3'
+
+vars:
+  GO_VERSION: 1.22
+
+tasks:
+  run:
+    desc: run the cmd/api application
+    cmds:
+      - go run ./cmd/api
+
+  test:
+    desc: 'Runs tests'
+    cmds:
+      - echo 'Running tests...'
+      - go test -vet=off ./...
+
+  test:race:
+    desc: 'Runs tests with race detection, requires gcc to be installed'
+    cmds:
+      - echo 'Running tests...'
+      - CGO_ENABLED=1 go test -race -vet=off ./...
+
+  lint:
+    desc: 'Checks for errors in a code, '
+    cmds:
+      - echo 'Linting code...'
+      - |
+        docker run --rm \
+                   --volume "{{.USER_WORKING_DIR}}:/app" \
+                   -w /app \
+                   golangci/golangci-lint golangci-lint run -v --go {{.GO_VERSION}}
+
+  lint:fix:
+    desc: 'Fixes possible linting and formatting issues'
+    cmds:
+      - echo 'Tidying and verifying module dependencies...'
+      - go mod tidy
+      - go mod verify
+      - echo 'Formatting code...'
+      - go fmt ./...
+      - |
+        docker run --rm \
+                   --volume "{{.USER_WORKING_DIR}}:/app" \
+                   -w /app \
+                   golangci/golangci-lint golangci-lint run -v --fix
+
+  build-docker:
+    cmds:
+      - echo 'Building docker image'
+      - docker build -t syncwatch-be .
+      - docker image prune --filter label=stage=gobuilder -f
+
+  db:create-migration:
+    desc: 'create a new database migration, usage: task db:create-migration NAME=migration_name'
+    requires:
+      vars: [ NAME ]
+    cmds:
+      - echo 'Creating migration files for {{.NAME}}...'
+      - |
+        docker run --rm \
+                   --volume "{{.USER_WORKING_DIR}}/migrations:/migrations" \
+                   migrate/migrate create -ext=sql -dir=migrations {{.NAME}}
+
+  db:run-migration:
+    desc: 'run database migrations'
+    cmds:
+      - echo "Running up migrations..."
+      - |
+        docker run --rm \
+                   --volume "{{.USER_WORKING_DIR}}/migrations:/migrations" \
+                   --network host \
+                   migrate/migrate -path=/migrations/ -database ${GREENLIGHT_DB_DSN}?sslmode=disable up
