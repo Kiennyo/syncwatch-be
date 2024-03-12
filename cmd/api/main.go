@@ -1,30 +1,48 @@
 package main
 
 import (
+	"context"
 	"log/slog"
+	"os"
 	"sync"
 
+	"github.com/kiennyo/syncwatch-be/internal/config"
+	"github.com/kiennyo/syncwatch-be/internal/db"
 	"github.com/kiennyo/syncwatch-be/internal/domain/users"
-	"github.com/kiennyo/syncwatch-be/internal/infrastructure/config"
-	"github.com/kiennyo/syncwatch-be/internal/infrastructure/http"
-	"github.com/kiennyo/syncwatch-be/internal/infrastructure/log"
-	"github.com/kiennyo/syncwatch-be/internal/infrastructure/security"
+	"github.com/kiennyo/syncwatch-be/internal/http"
+	"github.com/kiennyo/syncwatch-be/internal/mail"
+	"github.com/kiennyo/syncwatch-be/internal/security"
+	"github.com/kiennyo/syncwatch-be/internal/worker"
 )
 
-var wg sync.WaitGroup
-
 func main() {
-	log.Init()
+	var wg sync.WaitGroup
+	ctx := context.Background()
+	wrkr := worker.New(&wg)
+
 	cfg := config.Load()
 
-	tokens := security.NewTokens(cfg.Security.JWTSecret)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
 
-	authHandler := users.NewHandler()
+	postgres, err := db.New(ctx, cfg.DB)
+	if err != nil {
+		slog.Error("Failed to connect to db", "reason", err.Error()) // Fatal
+		return
+	}
+
+	mailer := mail.New(cfg.SMTP)
+	tokens := security.NewTokenFactory(cfg.Security)
+
+	// users module setup
+	userRepo := users.NewRepository(postgres)
+	userService := users.NewService(userRepo, tokens, wrkr, mailer)
+	usersHandler := users.NewHandler(userService)
 
 	server := http.New(&wg, cfg.HTTP, tokens).
-		AddRoutes("/users", authHandler.Handlers())
+		AddRoutes("/users", usersHandler.Handlers())
 
-	if err := server.Serve(); err != nil {
+	if err = server.Serve(); err != nil {
 		slog.Error("Failed to start server", "reason", err.Error()) // Fatal
 	}
 }

@@ -15,15 +15,16 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/kiennyo/syncwatch-be/internal/infrastructure/config"
-	"github.com/kiennyo/syncwatch-be/internal/infrastructure/security"
+	"github.com/kiennyo/syncwatch-be/internal/config"
+	"github.com/kiennyo/syncwatch-be/internal/security"
 )
 
 type Server struct {
-	wg     *sync.WaitGroup
 	config config.HTTP
 	routes map[string]chi.Router
-	tokens *security.Tokens
+	tokens *security.TokensFactory
+
+	wg *sync.WaitGroup
 }
 
 func (s *Server) Serve() error {
@@ -79,7 +80,7 @@ func (s *Server) AddRoutes(path string, routes chi.Router) *Server {
 	return s
 }
 
-func New(wg *sync.WaitGroup, c config.HTTP, tokens *security.Tokens) *Server {
+func New(wg *sync.WaitGroup, c config.HTTP, tokens *security.TokensFactory) *Server {
 	return &Server{
 		wg:     wg,
 		config: c,

@@ -6,12 +6,12 @@ import (
 )
 
 type AuthMiddleware struct {
-	Tokens *Tokens
+	Tokens TokenVerifier
 }
 
 func Authorize(next http.HandlerFunc, requiredScopes string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		principal := contextGetPrincipal(r)
+		principal := ContextGetPrincipal(r)
 		if principal.Sub == nil {
 			authenticationRequiredResponse(w, r)
 			return
@@ -36,7 +36,7 @@ func (a *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 
 		// anonymous request
 		if authorizationHeader == "" {
-			r = contextSetPrincipal(r, &contextValue{})
+			r = contextSetPrincipal(r, &ContextValue{})
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -49,16 +49,13 @@ func (a *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 
 		token := headerParts[1]
 
-		subject, scopes, err := a.Tokens.VerifyToken(token)
+		contextValue, err := a.Tokens.VerifyToken(token)
 		if err != nil {
 			invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
-		r = contextSetPrincipal(r, &contextValue{
-			Sub:    subject,
-			Scopes: scopes,
-		})
+		r = contextSetPrincipal(r, contextValue)
 
 		next.ServeHTTP(w, r)
 	})
