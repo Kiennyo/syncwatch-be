@@ -1,7 +1,6 @@
 package security
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -15,10 +14,11 @@ type Expiration time.Duration
 
 const (
 	Activation = Expiration(3 * 24 * time.Hour)
+	Access     = Expiration(15 * time.Minute)
 )
 
 type TokenCreator interface {
-	CreateToken(userID string, scopes []string, exp Expiration) (string, error)
+	CreateToken(userID string, scopes []string, exp Expiration) (*string, error)
 }
 
 type TokenVerifier interface {
@@ -49,7 +49,7 @@ func NewTokenFactory(cfg config.Security) *TokensFactory {
 	}
 }
 
-func (t *TokensFactory) CreateToken(userID string, scopes []string, exp Expiration) (string, error) {
+func (t *TokensFactory) CreateToken(userID string, scopes []string, exp Expiration) (*string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		Claims{
 			RegisteredClaims: jwt.RegisteredClaims{
@@ -65,10 +65,10 @@ func (t *TokensFactory) CreateToken(userID string, scopes []string, exp Expirati
 
 	tokenString, err := token.SignedString(t.secret)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return tokenString, nil
+	return &tokenString, nil
 }
 
 func (t *TokensFactory) VerifyToken(token string) (*ContextValue, error) {
@@ -79,12 +79,9 @@ func (t *TokensFactory) VerifyToken(token string) (*ContextValue, error) {
 		jwt.WithAudience(t.aud),
 		jwt.WithIssuer(t.iss),
 	)
+
 	if err != nil {
 		return nil, err
-	}
-
-	if !jwtToken.Valid {
-		return nil, fmt.Errorf("invalid token")
 	}
 
 	claims, ok := jwtToken.Claims.(*Claims)

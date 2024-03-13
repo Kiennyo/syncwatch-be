@@ -69,8 +69,7 @@ WITH inactive_user_role_insertion AS (
 
      permissions_insertion AS (
          INSERT INTO permission (title, slug, description)
-             VALUES ('Activate account', 'user:activate', 'Is able to active account.'),
-                    ('Activate account2', 'user:activate2', 'Is able to active account.2')
+             VALUES ('Activate account', 'user:activate', 'Is able to active account.')
              RETURNING id AS p_id)
 
 INSERT

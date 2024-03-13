@@ -55,7 +55,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validateUserInput(v, u); !v.Valid() {
-		httperr.Validation(w, r, v.Errors)
+		httperr.Validation(w, r, v.Errors())
 		return
 	}
 
@@ -63,7 +63,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, errDuplicateEmail):
 			v.AddError("email", "a user with this email address already exists")
-			httperr.Validation(w, r, v.Errors)
+			httperr.Validation(w, r, v.Errors())
 		default:
 			httperr.Internal(w, r, err)
 		}
