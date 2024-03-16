@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+const maxPayloadSize = 1048576
+
 type Envelope map[string]any
 
 type MalformedRequest struct {
@@ -53,8 +55,7 @@ func ReadJSON(w http.ResponseWriter, r *http.Request, dst any) error {
 		}
 	}
 
-	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
-
+	r.Body = http.MaxBytesReader(w, r.Body, maxPayloadSize)
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 

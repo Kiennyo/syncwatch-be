@@ -25,7 +25,6 @@ func New(ctx context.Context, cfg config.DB) (*pgxpool.Pool, error) {
 	parseConfig.MinConns = int32(cfg.MaxIdleConn)
 	parseConfig.MaxConnIdleTime = duration
 
-	// maybe I need single context
 	db, err := pgxpool.NewWithConfig(ctx, parseConfig)
 	if err != nil {
 		return nil, err

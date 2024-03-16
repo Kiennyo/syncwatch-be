@@ -18,7 +18,7 @@ func TestTokensFactory_CreateToken(t *testing.T) {
 	})
 
 	// Test cases
-	var tests = []struct {
+	tests := []struct {
 		name   string
 		userID string
 		scopes []string

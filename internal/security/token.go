@@ -79,7 +79,6 @@ func (t *TokensFactory) VerifyToken(token string) (*ContextValue, error) {
 		jwt.WithAudience(t.aud),
 		jwt.WithIssuer(t.iss),
 	)
-
 	if err != nil {
 		return nil, err
 	}
