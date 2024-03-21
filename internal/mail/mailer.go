@@ -11,15 +11,21 @@ import (
 	"github.com/kiennyo/syncwatch-be/internal/config"
 )
 
+type Sender interface {
+	Send(recipient, templateFile string, data any) error
+}
+
+var _ Sender = (*mailer)(nil)
+
 //go:embed "templates"
 var templateFS embed.FS
 
-type Mailer struct {
+type mailer struct {
 	dialer *mail.Dialer
 	sender string
 }
 
-func (m *Mailer) Send(recipient, templateFile string, data any) error {
+func (m *mailer) Send(recipient, templateFile string, data any) error {
 	tmpl, err := template.New("email").ParseFS(templateFS, "templates/"+templateFile)
 	if err != nil {
 		return err
@@ -62,11 +68,11 @@ func (m *Mailer) Send(recipient, templateFile string, data any) error {
 	return err
 }
 
-func New(cfg config.SMPT) *Mailer {
+func New(cfg config.SMPT) Sender {
 	dialer := mail.NewDialer(cfg.Host, cfg.Port, cfg.Username, cfg.Password)
 	dialer.Timeout = 5 * time.Second
 
-	return &Mailer{
+	return &mailer{
 		dialer: dialer,
 		sender: cfg.Sender,
 	}

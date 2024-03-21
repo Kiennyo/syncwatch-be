@@ -7,8 +7,7 @@ import (
 	"github.com/kiennyo/syncwatch-be/internal/validator"
 )
 
-//nolint:revive,line-length-limit
-var emailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+var emailRX = regexp.MustCompile(".+@.+\\..+")
 
 func validateUserInput(v *validator.Validator, u *user) {
 	v.Check(u.Name != "", "name", "must be provided")

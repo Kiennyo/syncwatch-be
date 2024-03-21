@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -17,14 +16,13 @@ import (
 
 	"github.com/kiennyo/syncwatch-be/internal/config"
 	"github.com/kiennyo/syncwatch-be/internal/security"
+	"github.com/kiennyo/syncwatch-be/internal/worker"
 )
 
 type Server struct {
 	config config.HTTP
 	routes map[string]chi.Router
 	tokens *security.TokensFactory
-
-	wg *sync.WaitGroup
 }
 
 func (s *Server) Serve() error {
@@ -54,7 +52,7 @@ func (s *Server) Serve() error {
 
 		slog.Info("completing background tasks")
 
-		s.wg.Wait()
+		worker.Wait()
 		shutdownError <- nil
 	}()
 
@@ -80,9 +78,8 @@ func (s *Server) AddRoutes(path string, routes chi.Router) *Server {
 	return s
 }
 
-func New(wg *sync.WaitGroup, c config.HTTP, tokens *security.TokensFactory) *Server {
+func New(c config.HTTP, tokens *security.TokensFactory) *Server {
 	return &Server{
-		wg:     wg,
 		config: c,
 		routes: make(map[string]chi.Router),
 		tokens: tokens,

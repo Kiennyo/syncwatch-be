@@ -4,27 +4,17 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"math/rand"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestReadJSON(t *testing.T) {
-	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
 	type Payload struct {
 		Name string `json:"name"`
-	}
-
-	randStringBytes := func(n int) string {
-		b := make([]byte, n)
-		for i := range b {
-			b[i] = letterBytes[rand.Intn(len(letterBytes))]
-		}
-		return string(b)
 	}
 
 	cases := []struct {
@@ -83,7 +73,7 @@ func TestReadJSON(t *testing.T) {
 		{
 			name:        "Too large payload",
 			contentType: "application/json",
-			body:        `{"name":"` + randStringBytes(maxPayloadSize) + `"}`,
+			body:        `{"name":"` + strings.Repeat("a", maxPayloadSize) + `"}`,
 			expectedError: &MalformedRequest{
 				Status: http.StatusRequestEntityTooLarge,
 				Msg:    "Request body must not be larger than 1MB",

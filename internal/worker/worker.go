@@ -6,22 +6,14 @@ import (
 	"sync"
 )
 
-type Worker struct {
-	wg *sync.WaitGroup
-}
+var wg sync.WaitGroup
 
-func New(wg *sync.WaitGroup) *Worker {
-	return &Worker{
-		wg: wg,
-	}
-}
-
-func (w *Worker) Background(fn func()) {
-	w.wg.Add(1)
+func Background(fn func()) {
+	wg.Add(1)
 
 	// Launch a background goroutine.
 	go func() {
-		defer w.wg.Done()
+		defer wg.Done()
 
 		// Recover any panic.
 		defer func() {
@@ -33,4 +25,8 @@ func (w *Worker) Background(fn func()) {
 		// Execute the arbitrary function that we passed as the parameter.
 		fn()
 	}()
+}
+
+func Wait() {
+	wg.Wait()
 }

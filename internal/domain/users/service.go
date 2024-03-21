@@ -16,18 +16,15 @@ type Service interface {
 type userService struct {
 	repository   Repository
 	tokenCreator security.TokenCreator
-	mailer       *mail.Mailer
-
-	worker *worker.Worker
+	mailer       mail.Sender
 }
 
 var _ Service = (*userService)(nil)
 
-func NewService(r Repository, t security.TokenCreator, w *worker.Worker, m *mail.Mailer) Service {
+func NewService(r Repository, t security.TokenCreator, m mail.Sender) Service {
 	return &userService{
 		repository:   r,
 		tokenCreator: t,
-		worker:       w,
 		mailer:       m,
 	}
 }
@@ -43,7 +40,7 @@ func (s *userService) SignUp(ctx context.Context, u *user) error {
 		return err
 	}
 
-	s.worker.Background(func() {
+	worker.Background(func() {
 		activationData := map[string]any{
 			"activationToken": token,
 		}
