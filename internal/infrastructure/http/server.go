@@ -8,21 +8,20 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/kiennyo/syncwatch-be/internal/config"
-	"github.com/kiennyo/syncwatch-be/internal/security"
-	"github.com/kiennyo/syncwatch-be/internal/worker"
+	"github.com/kiennyo/syncwatch-be/internal/infrastructure/config"
 )
 
 type Server struct {
+	wg     *sync.WaitGroup
 	config config.HTTP
 	routes map[string]chi.Router
-	tokens *security.TokensFactory
 }
 
 func (s *Server) Serve() error {
@@ -52,7 +51,7 @@ func (s *Server) Serve() error {
 
 		slog.Info("completing background tasks")
 
-		worker.Wait()
+		s.wg.Wait()
 		shutdownError <- nil
 	}()
 
@@ -78,23 +77,18 @@ func (s *Server) AddRoutes(path string, routes chi.Router) *Server {
 	return s
 }
 
-func New(c config.HTTP, tokens *security.TokensFactory) *Server {
+func New(wg *sync.WaitGroup, c config.HTTP) *Server {
 	return &Server{
+		wg:     wg,
 		config: c,
 		routes: make(map[string]chi.Router),
-		tokens: tokens,
 	}
 }
 
 func (s *Server) handler() *chi.Mux {
-	authMiddleware := security.AuthMiddleware{
-		Tokens: s.tokens,
-	}
-
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(authMiddleware.Authenticate)
 
 	for path, routes := range s.routes {
 		r.Mount(path, routes)
