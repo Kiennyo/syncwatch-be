@@ -1,11 +1,13 @@
 version: '3'
 
+dotenv: [ '.env' ]
+
 vars:
   GO_VERSION: 1.22
 
 tasks:
   run:
-    desc: run the cmd/api application
+    desc: 'Run the cmd/api application'
     cmds:
       - go run ./cmd/api
 
@@ -27,7 +29,8 @@ tasks:
       - echo 'Linting code...'
       - |
         docker run --rm \
-                   --volume "{{.USER_WORKING_DIR}}:/app" \
+                   --name linter \
+                   --volume "./:/app" \
                    -w /app \
                    golangci/golangci-lint golangci-lint run -v --go {{.GO_VERSION}}
 
@@ -41,7 +44,8 @@ tasks:
       - go fmt ./...
       - |
         docker run --rm \
-                   --volume "{{.USER_WORKING_DIR}}:/app" \
+                   --name linter \
+                   --volume "./:/app" \
                    -w /app \
                    golangci/golangci-lint golangci-lint run -v --fix
 
@@ -52,22 +56,23 @@ tasks:
       - docker image prune --filter label=stage=gobuilder -f
 
   db:create-migration:
-    desc: 'create a new database migration, usage: task db:create-migration NAME=migration_name'
+    desc: 'Create a new database migration, usage: task db:create-migration NAME=migration_name'
     requires:
       vars: [ NAME ]
     cmds:
       - echo 'Creating migration files for {{.NAME}}...'
       - |
         docker run --rm \
-                   --volume "{{.USER_WORKING_DIR}}/migrations:/migrations" \
+                   --volume "./migrations:/migrations" \
                    migrate/migrate create -ext=sql -dir=migrations {{.NAME}}
 
   db:run-migration:
-    desc: 'run database migrations'
+    desc: 'Run database migrations'
     cmds:
       - echo "Running up migrations..."
       - |
         docker run --rm \
-                   --volume "{{.USER_WORKING_DIR}}/migrations:/migrations" \
+                   --volume "./migrations:/migrations" \
+                   --name db-migrations \
                    --network host \
-                   migrate/migrate -path=/migrations/ -database ${GREENLIGHT_DB_DSN}?sslmode=disable up
+                   migrate/migrate -path=/migrations -database $DB_URL --verbose up
