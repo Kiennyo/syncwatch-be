@@ -41,10 +41,9 @@ func (m *mailSenderMock) Send(recipient, templateFile string, data any) error {
 	return args.Error(0)
 }
 
+//nolint:revive,function-length
 func TestUserService_SignUp(t *testing.T) {
 	ctx := context.Background()
-
-	t.Parallel()
 
 	type mocks struct {
 		repo         *repositoryMock

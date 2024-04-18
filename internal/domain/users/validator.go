@@ -7,6 +7,7 @@ import (
 	"github.com/kiennyo/syncwatch-be/internal/validator"
 )
 
+// nolint
 var emailRX = regexp.MustCompile(".+@.+\\..+")
 
 func validateUserInput(v *validator.Validator, u *user) {

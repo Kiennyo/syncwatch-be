@@ -14,6 +14,7 @@ import (
 	"github.com/kiennyo/syncwatch-be/internal/config"
 )
 
+//nolint:revive,cognitive-complexity
 func TestAuthMiddleware_Authenticate(t *testing.T) {
 	tokenFactory := NewTokenFactory(config.Security{
 		JWTSecret: "superSecret",
@@ -76,7 +77,7 @@ func TestAuthMiddleware_Authenticate(t *testing.T) {
 				Tokens: tokenFactory,
 			}
 
-			nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			nextHandler := http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 				if tc.context != nil {
 					principal := ContextGetPrincipal(r)
 					assert.Equal(t, tc.context.Scopes, principal.Scopes)
@@ -85,7 +86,7 @@ func TestAuthMiddleware_Authenticate(t *testing.T) {
 			})
 
 			am.Authenticate(nextHandler).ServeHTTP(res, req)
-			assert.Equal(t, tc.expectedStatusCode, res.Result().StatusCode)
+			assert.Equal(t, tc.expectedStatusCode, res.Result().StatusCode) // nolint
 		})
 	}
 }
@@ -131,6 +132,7 @@ func TestAuthMiddleware_Authorize(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			//nolint:gosec,G601
 			ctx := context.WithValue(context.TODO(), principalContext, &ContextValue{
 				Sub:    test.subject,
 				Scopes: &test.principalScopes,
@@ -139,7 +141,7 @@ func TestAuthMiddleware_Authorize(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+			handler := http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {})
 			Authorize(handler, test.requiredScopes).ServeHTTP(rr, req)
 
 			assert.Equal(t, test.expectedStatus, rr.Code)

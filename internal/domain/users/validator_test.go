@@ -89,7 +89,8 @@ func TestValidateUserInput(t *testing.T) {
 				"name":     "must be provided",
 				"email":    "must be provided",
 				"password": "must be provided",
-			}},
+			},
+		},
 		{
 			name:     "ExceedingLength",
 			user:     &user{Name: strings.Repeat("a", 501), Email: "user@example.com"},
@@ -104,21 +105,24 @@ func TestValidateUserInput(t *testing.T) {
 			password: "pa$$w0rd",
 			validationErrors: map[string]string{
 				"email": "must be a valid email address",
-			}},
+			},
+		},
 		{
 			name:     "ShortPassword",
 			user:     &user{Name: "User", Email: "user@example.com"},
 			password: "1",
 			validationErrors: map[string]string{
 				"password": "must be at least 8 bytes long",
-			}},
+			},
+		},
 		{
 			name:     "TooLongPassword",
 			user:     &user{Name: "User", Email: "user@example.com"},
-			password: strings.Repeat("pa$$w0rd", 10),
+			password: strings.Repeat("pa$$w0rd00", 10),
 			validationErrors: map[string]string{
 				"password": "must not be more than 72 bytes long",
-			}},
+			},
+		},
 		{
 			name:             "ValidInput",
 			user:             &user{Name: "User", Email: "user@example.com"},
@@ -130,7 +134,7 @@ func TestValidateUserInput(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			v := validator.New()
-			tc.user.Password = password{plaintext: &tc.password}
+			tc.user.Password = password{plaintext: &tc.password} //nolint
 			validateUserInput(v, tc.user)
 			assert.Equal(t, tc.validationErrors, v.Errors())
 		})

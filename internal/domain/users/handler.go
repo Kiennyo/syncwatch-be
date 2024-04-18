@@ -62,6 +62,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	if err = h.service.SignUp(r.Context(), u); err != nil {
 		switch {
 		case errors.Is(err, errDuplicateEmail):
+			// could make conflict in the future
 			v.AddError("email", "a user with this email address already exists")
 			httperr.Validation(w, r, v.Errors())
 		default:

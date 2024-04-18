@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+//nolint:revive,cognitive-complexity
 func TestBackground(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -21,8 +22,7 @@ func TestBackground(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
+		t.Run(tt.name, func(_ *testing.T) {
 			if tt.wantErr {
 				Background(func() {
 					panic("This is a test panic")
@@ -32,7 +32,6 @@ func TestBackground(t *testing.T) {
 					time.Sleep(time.Second)
 				})
 			}
-
 			Wait()
 		})
 	}

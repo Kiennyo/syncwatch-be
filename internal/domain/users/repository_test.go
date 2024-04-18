@@ -24,7 +24,10 @@ func TestUserRepository_Create(t *testing.T) {
 		Scopes: nil,
 	}
 	err = u.Password.set("test")
+	assert.Nil(t, err)
+
 	err = repository.Create(ctx, u)
+	assert.Nil(t, err)
 
 	assert.Equal(t, []string{"user:activate"}, u.Scopes)
 }
@@ -45,6 +48,7 @@ func TestUserRepository_CreateUserWithExistingEmail(t *testing.T) {
 		Scopes: nil,
 	}
 	err = u.Password.set("test")
+	assert.Nil(t, err)
 
 	err = repository.Create(ctx, u)
 	assert.Nil(t, err)

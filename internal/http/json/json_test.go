@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//nolint:revive,cognitive-complexity
 func TestReadJSON(t *testing.T) {
 	type Payload struct {
 		Name string `json:"name"`
@@ -128,6 +129,7 @@ func TestReadJSON(t *testing.T) {
 	}
 }
 
+//nolint:revive,cognitive-complexity
 func TestWriteJSON(t *testing.T) {
 	data := map[string]string{"key": "value"}
 	headers := http.Header{"Test-Header": []string{"Test-Value"}}
@@ -135,7 +137,7 @@ func TestWriteJSON(t *testing.T) {
 	tests := []struct {
 		name      string
 		status    int
-		data      interface{}
+		data      any
 		headers   http.Header
 		err       error
 		expHeader http.Header
@@ -170,7 +172,7 @@ func TestWriteJSON(t *testing.T) {
 				assert.Error(t, err)
 				assert.Equal(t, tt.err.Error(), err.Error())
 			} else {
-				result := recorder.Result()
+				result := recorder.Result() // nolint
 				assert.Equal(t, tt.status, result.StatusCode)
 
 				// Headers

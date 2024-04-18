@@ -3,9 +3,9 @@ package testhelpers
 import (
 	"bufio"
 	"context"
-	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 	"time"
@@ -26,9 +26,10 @@ type TestingDB struct {
 
 var cached *TestingDB
 
+//nolint:revive,cognitive-complexity
 func CreateTestDB(ctx context.Context) (*TestingDB, error) {
 	if cached != nil {
-		fmt.Println("Getting cached instance")
+		slog.Info("Getting cached instance")
 		return cached, nil
 	}
 
@@ -53,6 +54,10 @@ func CreateTestDB(ctx context.Context) (*TestingDB, error) {
 				WithStartupTimeout(5*time.Second),
 		),
 	)
+	if err != nil {
+		slog.Error("Failed to create postgres container")
+		return nil, err
+	}
 
 	// set DB_URL for migrations
 	ip, _ := container.ContainerIP(ctx)
@@ -68,24 +73,27 @@ func CreateTestDB(ctx context.Context) (*TestingDB, error) {
 	stderr, _ := cmd.StderrPipe()
 
 	if err = cmd.Start(); err != nil {
-		log.Fatalf("cmd.Start: %v", err)
+		log.Printf("cmd.Start: %v", err)
 	}
 
 	scanner := bufio.NewScanner(stderr)
 	scanner.Split(bufio.ScanLines)
-	for scanner.Scan() {
-		m := scanner.Text()
-		fmt.Println(m)
-	}
+
+	// for debugging
+	// for scanner.Scan() {
+	//	m := scanner.Text()
+	//	fmt.Println(m)
+	// }
 
 	if err = cmd.Wait(); err != nil {
-		var exiterr *exec.ExitError
-		if errors.As(err, &exiterr) {
-			fmt.Println(fmt.Sprintf("Exit Status: %d", exiterr.ExitCode()))
-		}
+		return nil, err
 	}
 
 	s, err := container.ConnectionString(ctx, "sslmode=disable")
+	if err != nil {
+		slog.Error("Failed getting connection string")
+		return nil, err
+	}
 
 	pool, err := db.New(ctx, config.DB{
 		URL:         s,
@@ -93,6 +101,10 @@ func CreateTestDB(ctx context.Context) (*TestingDB, error) {
 		MaxIdleConn: 1,
 		MaxIdleTime: "1m",
 	})
+	if err != nil {
+		slog.Error("Failed connecting to database")
+		return nil, err
+	}
 
 	cached = &TestingDB{DB: pool}
 
