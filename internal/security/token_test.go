@@ -37,7 +37,7 @@ func TestTokensFactory_CreateToken(t *testing.T) {
 			assert.NotEmpty(t, tokenString)
 
 			// Verify created token
-			contextValue, err := factory.VerifyToken(*tokenString)
+			contextValue, err := factory.VerifyToken(tokenString)
 
 			// Check error and returned claims
 			assert.Nil(t, err)

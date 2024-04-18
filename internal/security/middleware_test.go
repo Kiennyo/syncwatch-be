@@ -54,7 +54,7 @@ func TestAuthMiddleware_Authenticate(t *testing.T) {
 		},
 		{
 			name:               "Valid Token",
-			authorizationToken: fmt.Sprintf("Bearer %s", *token),
+			authorizationToken: fmt.Sprintf("Bearer %s", token),
 			expectedStatusCode: http.StatusOK,
 			context: &ContextValue{
 				Sub:    &subject,
