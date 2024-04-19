@@ -23,6 +23,16 @@ func (r *repositoryMock) Create(ctx context.Context, u *user) error {
 	return args.Error(0)
 }
 
+func (r *repositoryMock) FindById(ctx context.Context, id string) (*user, error) {
+	args := r.Called(ctx, id)
+	return args.Get(0).(*user), args.Error(0)
+}
+
+func (r *repositoryMock) Activate(ctx context.Context, u *user) error {
+	args := r.Called(ctx, u)
+	return args.Error(0)
+}
+
 type tokenCreatorMock struct {
 	mock.Mock
 }
