@@ -89,7 +89,7 @@ func (t *TokensFactory) VerifyToken(token string) (*ContextValue, error) {
 	}
 
 	return &ContextValue{
-		Sub:    &claims.Subject,
-		Scopes: &claims.Scopes,
+		Sub:    claims.Subject,
+		Scopes: claims.Scopes,
 	}, nil
 }

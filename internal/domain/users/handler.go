@@ -8,6 +8,7 @@ import (
 
 	httperr "github.com/kiennyo/syncwatch-be/internal/http/error"
 	"github.com/kiennyo/syncwatch-be/internal/http/json"
+	"github.com/kiennyo/syncwatch-be/internal/security"
 	"github.com/kiennyo/syncwatch-be/internal/validator"
 )
 
@@ -24,6 +25,7 @@ func NewHandler(s Service) *Handler {
 func (h *Handler) Handlers() chi.Router {
 	r := chi.NewRouter()
 	r.Post("/", h.signUp)
+	r.Patch("/{userID}/activated", security.Authorize(h.activate, "user:activate"))
 
 	return r
 }
@@ -72,6 +74,27 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = json.WriteJSON(w, http.StatusCreated, json.Envelope{"user": u}, nil)
+	if err != nil {
+		httperr.Internal(w, r, err)
+	}
+}
+
+func (h *Handler) activate(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "userID")
+
+	principal := security.ContextGetPrincipal(r)
+
+	if userID != principal.Sub {
+		httperr.Forbidden(w, r)
+	}
+
+	err := h.service.Activate(r.Context(), principal.Sub)
+	if err != nil {
+		httperr.Internal(w, r, err)
+		return
+	}
+
+	err = json.WriteJSON(w, http.StatusOK, json.Envelope{"message": "User activated successfully"}, nil)
 	if err != nil {
 		httperr.Internal(w, r, err)
 	}
