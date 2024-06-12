@@ -11,6 +11,7 @@ import (
 
 type Service interface {
 	SignUp(ctx context.Context, u *user) error
+	Activate(ctx context.Context, id string) error
 }
 
 type userService struct {
@@ -52,4 +53,20 @@ func (s *userService) SignUp(ctx context.Context, u *user) error {
 	})
 
 	return err
+}
+
+func (s *userService) Activate(ctx context.Context, id string) error {
+	usr, err := s.repository.FindById(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	usr.Activated = true
+
+	err = s.repository.Activate(ctx, usr)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

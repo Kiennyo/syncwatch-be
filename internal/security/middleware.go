@@ -12,12 +12,12 @@ type AuthMiddleware struct {
 func Authorize(next http.HandlerFunc, requiredScopes string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		principal := ContextGetPrincipal(r)
-		if principal.Sub == nil {
+		if principal.Sub == "" {
 			authenticationRequiredResponse(w, r)
 			return
 		}
 
-		scopes := *principal.Scopes
+		scopes := principal.Scopes
 
 		if !strings.Contains(scopes, requiredScopes) {
 			notPermittedResponse(w, r)

@@ -41,8 +41,8 @@ func TestTokensFactory_CreateToken(t *testing.T) {
 
 			// Check error and returned claims
 			assert.Nil(t, err)
-			assert.Equal(t, tt.userID, *contextValue.Sub)
-			assert.Equal(t, strings.Join(tt.scopes, " "), *contextValue.Scopes)
+			assert.Equal(t, tt.userID, contextValue.Sub)
+			assert.Equal(t, strings.Join(tt.scopes, " "), contextValue.Scopes)
 		})
 	}
 }

@@ -29,6 +29,10 @@ func Validation(w http.ResponseWriter, r *http.Request, errs map[string]string) 
 	Response(w, r, http.StatusUnprocessableEntity, errs)
 }
 
+func Forbidden(w http.ResponseWriter, r *http.Request) {
+	Response(w, r, http.StatusForbidden, "Forbidden")
+}
+
 func InvalidJSON(w http.ResponseWriter, r *http.Request, err error) {
 	var mr *json.MalformedRequest
 	if errors.As(err, &mr) {

@@ -58,8 +58,8 @@ func TestAuthMiddleware_Authenticate(t *testing.T) {
 			authorizationToken: fmt.Sprintf("Bearer %s", token),
 			expectedStatusCode: http.StatusOK,
 			context: &ContextValue{
-				Sub:    &subject,
-				Scopes: &scopesJoined,
+				Sub:    subject,
+				Scopes: scopesJoined,
 			},
 		},
 	}
@@ -97,35 +97,35 @@ func TestAuthMiddleware_Authorize(t *testing.T) {
 		name            string
 		requiredScopes  string
 		principalScopes string
-		subject         *string
+		subject         string
 		expectedStatus  int
 	}{
 		{
 			name:            "Request scopes matches with handler's scopes",
 			requiredScopes:  "user:read",
 			principalScopes: "user:read",
-			subject:         &sub,
+			subject:         sub,
 			expectedStatus:  http.StatusOK,
 		},
 		{
 			name:            "Request scopes doesnt match with handler's scopes",
 			requiredScopes:  "admin:write",
 			principalScopes: "admin:read",
-			subject:         &sub,
+			subject:         sub,
 			expectedStatus:  http.StatusForbidden,
 		},
 		{
 			name:            "Request doesn't have required scopes",
 			requiredScopes:  "admin:read",
 			principalScopes: "",
-			subject:         &sub,
+			subject:         sub,
 			expectedStatus:  http.StatusForbidden,
 		},
 		{
 			name:            "Request doesn't have subject",
 			requiredScopes:  "admin:read",
 			principalScopes: "",
-			subject:         nil,
+			subject:         "",
 			expectedStatus:  http.StatusUnauthorized,
 		},
 	}
@@ -135,7 +135,7 @@ func TestAuthMiddleware_Authorize(t *testing.T) {
 			//nolint:gosec,G601
 			ctx := context.WithValue(context.TODO(), principalContext, &ContextValue{
 				Sub:    test.subject,
-				Scopes: &test.principalScopes,
+				Scopes: test.principalScopes,
 			})
 			req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "/", nil)
 

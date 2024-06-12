@@ -8,8 +8,8 @@ import (
 type contextKey string
 
 type ContextValue struct {
-	Sub    *string
-	Scopes *string
+	Sub    string
+	Scopes string
 }
 
 const principalContext = contextKey("principal")

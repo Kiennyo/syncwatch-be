@@ -16,6 +16,11 @@ type mockService struct {
 	mock.Mock
 }
 
+func (t *mockService) Activate(ctx context.Context, id string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (t *mockService) SignUp(ctx context.Context, u *user) error {
 	args := t.Called(ctx, u)
 	return args.Error(0)
